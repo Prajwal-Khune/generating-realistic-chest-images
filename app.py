@@ -2,7 +2,6 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
 
 custom_objects = {
     # Add custom objects if your model uses any custom layers or functions
@@ -32,20 +31,27 @@ def get_label_name(label):
 
 st.title("GAN-generated Chest X-ray Images")
 
-# Sidebar for user inputs
-st.sidebar.header("Generation Settings")
-num_images = st.sidebar.slider("Number of images to generate", min_value=1, max_value=100, value=16)
-latent_dim = st.sidebar.number_input("Latent space dimension", min_value=10, max_value=500, value=100)
-labels_dim = st.sidebar.number_input("Number of classes", min_value=2, max_value=10, value=2)
+# User input for the number of images
+num_images = st.slider("Number of images to generate", min_value=1, max_value=100, value=16)
 
-if st.sidebar.button("Generate Images"):
+latent_dim = 100  # Latent space dimension
+labels_dim = 2  # Number of classes
+
+if st.button("Generate Images"):
     generated_images, labels = generate_images(generator, num_images, latent_dim, labels_dim)
 
     st.subheader("Generated Images")
-    fig, axes = plt.subplots(2, 8, figsize=(15, 4))
-    for i, ax in enumerate(axes.flat):
+    # Determine the number of rows and columns for the plot grid
+    rows = (num_images + 7) // 8  # 8 images per row
+    fig, axes = plt.subplots(rows, 8, figsize=(15, rows * 2))
+    axes = axes.flatten() if rows > 1 else [axes]  # Ensure axes is iterable
+
+    for i, ax in enumerate(axes):
         if i < num_images:
             ax.imshow(generated_images[i])
             ax.axis('off')
             ax.set_title(get_label_name(np.argmax(labels[i])))  # Display label name
+        else:
+            ax.axis('off')  # Turn off unused axes
+
     st.pyplot(fig)
